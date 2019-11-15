@@ -1,0 +1,26 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+pylint = "*"
+autopep8 = "*"
+flake8 = "*"
+jupyterlab = "*"
+
+[packages]
+torch = "*"
+torchvision = "*"
+tqdm = "*"
+future = "*"
+tensorboard = "*"
+scikit-learn = "*"
+kornia = "*"
+pandas = "*"
+googledrivedownloader = "*"
+opencv-python = "*"
+
+[requires]
+python_version = "3.7"
