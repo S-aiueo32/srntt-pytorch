@@ -1,5 +1,4 @@
 import argparse
-import time
 from contextlib import contextmanager
 
 from PIL import Image
@@ -17,9 +16,15 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 @contextmanager
 def timer(name):
-    t0 = time.time()
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
+
+    start.record()
     yield
-    print(f'[{name}] done in {time.time() - t0:.3f} s')
+    end.record()
+
+    torch.cuda.synchronize()
+    print(f'[{name}] done in {start.elapsed_time(end):.3f} ms')
 
 
 def parse_args():

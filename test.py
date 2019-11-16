@@ -7,9 +7,11 @@ from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 from tqdm import tqdm
 
-from models import Swapper, VGG19, SRNTT
+from models import Swapper, VGG, SRNTT
 from datasets import CUFED5Dataset
 from losses import PSNR
+
+TARGET_LAYERS = ['relu3_1', 'relu2_1', 'relu1_1']
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -23,7 +25,7 @@ if __name__ == "__main__":
     dataset = CUFED5Dataset('/home/ubuntu/srntt-pytorch/data/CUFED5')
     dataloader = DataLoader(dataset)
 
-    vgg = VGG19().to(device)
+    vgg = VGG(model_type='vgg19').to(device)
     swapper = Swapper().to(device)
     model = SRNTT(use_weights=args.use_weights).to(device)
     model.load_state_dict(torch.load(args.weight))
@@ -38,13 +40,13 @@ if __name__ == "__main__":
             img_lr = batch['img_lr'].to(device)
             img_in_up = batch['img_in_up'].to(device)
 
-            map_in = vgg(img_in_up)
+            map_in = vgg(img_in_up, TARGET_LAYERS)
 
             row = [batch['filename'][0].split('_')[0]]
             for ref_idx in range(7):
                 ref = batch['ref'][ref_idx]
-                map_ref = vgg(ref['ref'].to(device))
-                map_ref_blur = vgg(ref['ref_blur'].to(device))
+                map_ref = vgg(ref['ref'].to(device), TARGET_LAYERS)
+                map_ref_blur = vgg(ref['ref_blur'].to(device), TARGET_LAYERS)
 
                 maps, weights, correspondences = swapper(
                     map_in, map_ref, map_ref_blur)
