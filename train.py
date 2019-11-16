@@ -18,7 +18,6 @@ from utils import init_seeds
 
 torch.autograd.set_detect_anomaly(True)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-init_seeds(seed=123)
 
 
 def parse_args():
@@ -47,13 +46,18 @@ def parse_args():
     parser.add_argument('--display_freq', type=int, default=100)
     # weights setting
     parser.add_argument('--init_weight', type=str, default='weights/SRGAN.pth')
-    parser.add_argument('--pretrain', type=str, default=None)
+    parser.add_argument('--netG_pre', type=str, default=None)
+    parser.add_argument('--netD_pre', type=str, default=None)
+    # seed
+    parser.add_argument('--seed', type=int, default=123)
     # debug
     parser.add_argument('--debug', action='store_true')
     return parser.parse_args()
 
 
 def main(args):
+    init_seeds(seed=args.seed)
+
     # split data
     files = list([f.stem for f in Path(args.dataroot).glob('map/*.npz')])
     train_files, val_files = train_test_split(files, test_size=0.1)
@@ -95,7 +99,7 @@ def main(args):
     # for tensorboard
     writer = SummaryWriter(log_dir=f'runs/{args.pid}' if args.pid else None)
 
-    if args.pretrain is None:
+    if args.netG_pre is None:
         """ pretrain """
         step = 0
         for epoch in range(1, args.n_epochs_init + 1):
@@ -135,7 +139,9 @@ def main(args):
             torch.save(netG.state_dict(), out_path)
 
     else:  # ommit pre-training
-        netG.load_state_dict(torch.load(args.pretrain))
+        netG.load_state_dict(torch.load(args.netG_pre))
+        if args.netD_pre:
+            netD.load_state_dict(torch.load(args.netD_pre))
 
     """ train with all losses """
     step = 0
