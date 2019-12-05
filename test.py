@@ -18,11 +18,12 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--dataroot', type=str, default='./data/CUFED5')
     parser.add_argument('--weight', '-w', type=str, required=True)
     parser.add_argument('--use_weights', action='store_true')
     args = parser.parse_args()
 
-    dataset = CUFED5Dataset('/home/ubuntu/srntt-pytorch/data/CUFED5')
+    dataset = CUFED5Dataset(args.dataroot)
     dataloader = DataLoader(dataset)
 
     vgg = VGG(model_type='vgg19').to(device)
