@@ -69,9 +69,39 @@ def main(args):
         train_set, args.batch_size, shuffle=True, num_workers=4)
     val_loader = DataLoader(val_set, args.batch_size, drop_last=True)
 
+    
+    # load state_dict
+    old_state_dict = torch.load(args.init_weight)
+
+    # create a new state_dict with renamed keys
+    new_state_dict = OrderedDict()
+    for key, val in old_state_dict.items():
+        new_key = key
+        if 'conv_first' in new_key:
+            new_key = new_key.replace('conv_first', 'head.0')
+        if 'recon_trunk' in new_key:
+            new_key = new_key.replace('recon_trunk', 'body')
+        if '.conv1.weight' in new_key:
+            new_key = new_key.replace('.conv1.weight', '.body.0.weight')
+        if '.conv1.bias' in new_key:
+            new_key = new_key.replace('.conv1.bias', '.body.0.bias')
+        if '.conv2.weight' in new_key:
+            new_key = new_key.replace('.conv2.weight', '.body.2.weight')
+        if '.conv2.bias' in new_key:
+            new_key = new_key.replace('.conv2.bias', '.body.2.bias')
+        if 'upconv1' in new_key:
+            new_key = new_key.replace('upconv1', 'tail.0')
+        if 'upconv2' in new_key:
+            new_key = new_key.replace('upconv2', 'tail.3')
+        if 'HRconv' in new_key:
+            new_key = new_key.replace('HRconv', 'tail.6')
+        if 'conv_last' in new_key:
+            new_key = new_key.replace('conv_last', 'tail.8')
+        new_state_dict[new_key] = val
+
     # define networks
     netG = SRNTT(args.ngf, args.n_blocks, args.use_weights).to(device)
-    netG.content_extractor.load_state_dict(torch.load(args.init_weight))
+    netG.content_extractor.load_state_dict(new_state_dict)
     if args.netD == 'image':
         netD = ImageDiscriminator(args.ndf).to(device)
     elif args.netD == 'patch':
